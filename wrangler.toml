@@ -1,7 +1,7 @@
 # Cloudflare Pages — biz.fyndroo.com
 # Deploy: ./scripts/deploy_cdn.sh
-# Account ID: same vibin team as fyndroo-reports (override with CLOUDFLARE_ACCOUNT_ID)
+# Uses CLOUDFLARE_ACCOUNT_ID env (Koshy.vibin team) — see deploy_cdn.sh
 
 name = "fyndroo-biz"
 compatibility_date = "2024-01-01"
-pages_build_output_dir = "."
+pages_build_output_dir = "dist"

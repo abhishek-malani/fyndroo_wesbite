@@ -32,6 +32,18 @@ export CLOUDFLARE_ACCOUNT_ID=your_team_account_id
 CF_PAGES_PROJECT=fyndroo-biz CF_CUSTOM_DOMAIN=biz.fyndroo.com ./scripts/deploy_cdn.sh
 ```
 
+## Custom domain (biz.fyndroo.com)
+
+Deploy script registers the domain on the Pages project. If DNS is not auto-created (API deploy), add once in Cloudflare:
+
+**DNS** → `fyndroo.com` → **Add record**
+
+| Type | Name | Target | Proxy |
+| --- | --- | --- | --- |
+| CNAME | `biz` | `fyndroo-biz.pages.dev` | Proxied |
+
+Or: **Workers & Pages** → `fyndroo-biz` → **Custom domains** → confirm `biz.fyndroo.com`.
+
 ## Files
 
 | Path | Purpose |
