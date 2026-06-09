@@ -28,6 +28,10 @@ echo "==> Building static bundle"
 rm -rf dist
 mkdir -p dist
 cp index.html dist/
+if [[ -d functions ]]; then
+  cp -r functions dist/functions
+  echo "    Included Pages Functions (api/signup)"
+fi
 
 echo "==> Deploying dist/ → Pages project: ${PROJECT}"
 npx --yes wrangler pages deploy dist \

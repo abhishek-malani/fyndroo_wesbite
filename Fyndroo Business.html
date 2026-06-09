@@ -10,6 +10,7 @@
 <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
 <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
 <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   html { scroll-behavior: smooth; }
@@ -71,6 +72,21 @@
   .marquee-track { display: flex; gap: 16px; animation: marquee 30s linear infinite; }
   .marquee-track:hover { animation-play-state: paused; }
   @keyframes marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+
+  .signup-overlay {
+    position: fixed; inset: 0; z-index: 10000;
+    background: rgba(12,10,9,0.55); backdrop-filter: blur(6px);
+    display: flex; align-items: center; justify-content: center;
+    padding: 16px;
+  }
+  .signup-modal {
+    width: 100%; max-width: 480px; max-height: 90vh; overflow-y: auto;
+    background: #FFFBF7; border-radius: 20px; padding: 28px;
+    box-shadow: 0 24px 80px rgba(0,0,0,0.2); border: 1px solid #E7E5E4;
+  }
+  .signup-field { width: 100%; padding: 12px 14px; border-radius: 10px; border: 1.5px solid #E7E5E4; font-family: 'DM Sans', system-ui, sans-serif; font-size: 14.5px; background: #fff; color: #0C0A09; }
+  .signup-field:focus { outline: none; border-color: #EA580C; box-shadow: 0 0 0 3px rgba(234,88,12,0.12); }
+  .signup-label { display: block; font-size: 11px; font-weight: 700; color: #78716C; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 6px; }
 
   /* ─── Responsive layout ─── */
   .fy-container { max-width: 1160px; margin: 0 auto; padding: 0 28px; width: 100%; }
@@ -176,6 +192,20 @@ const C = {
 
 const font = `'DM Sans', system-ui, sans-serif`;
 const serif = `'DM Serif Display', Georgia, serif`;
+
+const SIGNUP_CONFIG = {
+  apiUrl: "/api/signup",
+  // Replace with your Turnstile site key (Cloudflare dashboard → Turnstile)
+  turnstileSiteKey: "1x00000000000000000000AA",
+};
+
+const PLAN_META = {
+  basic: { label: "Basic", title: "Start your free GEO score", cta: "Start Free", showWebsite: false, showClients: false },
+  pro: { label: "Pro", title: "Start your Pro trial", cta: "Start Pro Trial", showWebsite: true, showClients: false },
+  agency: { label: "Agency", title: "Apply to the partner program", cta: "Apply to Partner", showWebsite: true, showClients: true },
+};
+
+const PLAN_FROM_TIER = { Basic: "basic", Free: "basic", Pro: "pro", Agency: "agency" };
 
 // ─── ICONS ────────────────────────────────────
 const paths = {
@@ -993,7 +1023,7 @@ const HomePage = ({ setActive }) => (
                   </div>
                 ))}
               </div>
-              <button onClick={() => setActive("pricing")} style={{
+              <PricingCTA tier={t.tier} style={{
                 width:"100%", padding:"11px 0", borderRadius:10,
                 fontFamily:font, fontWeight:700, fontSize:14, cursor:"pointer",
                 border: t.primary ? "none" : `1.5px solid ${t.accent || C.orange}`,
@@ -1002,7 +1032,7 @@ const HomePage = ({ setActive }) => (
                 transition:"all 0.2s",
               }}>
                 {i===2 ? "Partner with Us" : i===0 ? "Start Free" : "Upgrade to Pro"}
-              </button>
+              </PricingCTA>
             </div>
           </Reveal>
         ))}
@@ -1544,17 +1574,19 @@ const PricingPage = ({ setActive }) => (
                   </div>
                 ))}
               </div>
-              <button style={{
-                width:"100%", padding:"13px 0", borderRadius:10,
-                fontFamily:font, fontWeight:700, fontSize:14.5, cursor:"pointer",
-                border: t.primary ? "none" : `1.5px solid ${t.accent || C.orange}`,
-                background: t.primary ? C.orange : "transparent",
-                color: t.primary ? "#fff" : t.accent || C.orange,
-                transition:"all 0.2s",
-              }}
-              onMouseEnter={e => { if(!t.primary) { e.currentTarget.style.background=`${t.accent || C.orange}10`; } }}
-              onMouseLeave={e => { if(!t.primary) { e.currentTarget.style.background="transparent"; } }}
-              >{t.cta}</button>
+              <PricingCTA
+                tier={t.tier}
+                style={{
+                  width:"100%", padding:"13px 0", borderRadius:10,
+                  fontFamily:font, fontWeight:700, fontSize:14.5, cursor:"pointer",
+                  border: t.primary ? "none" : `1.5px solid ${t.accent || C.orange}`,
+                  background: t.primary ? C.orange : "transparent",
+                  color: t.primary ? "#fff" : t.accent || C.orange,
+                  transition:"all 0.2s",
+                }}
+                onMouseEnter={e => { if(!t.primary) { e.currentTarget.style.background=`${t.accent || C.orange}10`; } }}
+                onMouseLeave={e => { if(!t.primary) { e.currentTarget.style.background="transparent"; } }}
+              >{t.cta}</PricingCTA>
             </div>
           </Reveal>
         ))}
@@ -1621,6 +1653,155 @@ const Footer = ({ setActive }) => (
   </footer>
 );
 
+// ─── SIGNUP FORM ──────────────────────────────
+const SignupContext = React.createContext(null);
+const useSignup = () => React.useContext(SignupContext);
+
+const SignupModal = ({ open, plan, onClose }) => {
+  const meta = PLAN_META[plan] || PLAN_META.basic;
+  const [form, setForm] = useState({ name: "", email: "", company: "", website: "", clients: "", message: "" });
+  const [status, setStatus] = useState("idle");
+  const [error, setError] = useState("");
+  const [turnstileToken, setTurnstileToken] = useState("");
+  const turnstileRef = useRef(null);
+  const widgetIdRef = useRef(null);
+
+  useEffect(() => {
+    if (!open) return undefined;
+    setStatus("idle");
+    setError("");
+    setTurnstileToken("");
+    setForm({ name: "", email: "", company: "", website: "", clients: "", message: "" });
+    document.body.style.overflow = "hidden";
+    return () => { document.body.style.overflow = ""; };
+  }, [open, plan]);
+
+  useEffect(() => {
+    if (!open || !turnstileRef.current || !window.turnstile) return undefined;
+    turnstileRef.current.innerHTML = "";
+    widgetIdRef.current = window.turnstile.render(turnstileRef.current, {
+      sitekey: SIGNUP_CONFIG.turnstileSiteKey,
+      callback: (token) => setTurnstileToken(token),
+      "expired-callback": () => setTurnstileToken(""),
+      "error-callback": () => setTurnstileToken(""),
+    });
+    return () => {
+      if (widgetIdRef.current != null && window.turnstile) {
+        try { window.turnstile.remove(widgetIdRef.current); } catch (_) {}
+        widgetIdRef.current = null;
+      }
+    };
+  }, [open, plan]);
+
+  const setField = (key) => (e) => setForm((f) => ({ ...f, [key]: e.target.value }));
+
+  const submit = async (e) => {
+    e.preventDefault();
+    setStatus("submitting");
+    setError("");
+    try {
+      const res = await fetch(SIGNUP_CONFIG.apiUrl, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ ...form, plan, turnstileToken }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.ok) {
+        throw new Error(data.error || "Something went wrong. Please try again.");
+      }
+      setStatus("success");
+    } catch (err) {
+      setStatus("error");
+      setError(err.message || "Something went wrong. Please try again.");
+    }
+  };
+
+  if (!open) return null;
+
+  return (
+    <div className="signup-overlay" onClick={onClose}>
+      <div className="signup-modal" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true" aria-labelledby="signup-title">
+        <div style={{display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:18}}>
+          <div>
+            <Badge>{meta.label} plan</Badge>
+            <h2 id="signup-title" style={{fontFamily:serif, fontSize:26, fontWeight:700, color:C.text, margin:"12px 0 6px", letterSpacing:-0.5}}>{meta.title}</h2>
+            <p style={{fontSize:14, color:C.muted, margin:0, lineHeight:1.6}}>We'll reach out shortly. Your info is saved to our signup sheet.</p>
+          </div>
+          <button onClick={onClose} aria-label="Close" style={{background:"none", border:"none", cursor:"pointer", color:C.muted, padding:4}}>
+            <Icon name="close" size={22}/>
+          </button>
+        </div>
+
+        {status === "success" ? (
+          <div style={{textAlign:"center", padding:"28px 8px"}}>
+            <div style={{width:56, height:56, borderRadius:"50%", background:`${C.green}14`, display:"flex", alignItems:"center", justifyContent:"center", margin:"0 auto 16px"}}>
+              <Icon name="check" size={28} color={C.green} sw={2.5}/>
+            </div>
+            <div style={{fontWeight:700, fontSize:18, color:C.text, marginBottom:8}}>You're on the list!</div>
+            <p style={{fontSize:14, color:C.muted, margin:"0 0 20px", lineHeight:1.6}}>Thanks for your interest in Fyndroo {meta.label}. We'll be in touch soon.</p>
+            <Btn className="btn-primary" onClick={onClose}>Close</Btn>
+          </div>
+        ) : (
+          <form onSubmit={submit} style={{display:"flex", flexDirection:"column", gap:14}}>
+            <div>
+              <label className="signup-label">Full name *</label>
+              <input className="signup-field" required value={form.name} onChange={setField("name")} placeholder="Jane Doe" />
+            </div>
+            <div>
+              <label className="signup-label">Work email *</label>
+              <input className="signup-field" type="email" required value={form.email} onChange={setField("email")} placeholder="jane@company.com" />
+            </div>
+            <div>
+              <label className="signup-label">Company *</label>
+              <input className="signup-field" required value={form.company} onChange={setField("company")} placeholder="Acme Remodeling" />
+            </div>
+            {meta.showWebsite && (
+              <div>
+                <label className="signup-label">Website {plan === "pro" ? "*" : ""}</label>
+                <input className="signup-field" required={plan === "pro"} value={form.website} onChange={setField("website")} placeholder="https://acme.com" />
+              </div>
+            )}
+            {meta.showClients && (
+              <div>
+                <label className="signup-label">Number of clients (optional)</label>
+                <input className="signup-field" value={form.clients} onChange={setField("clients")} placeholder="e.g. 12" />
+              </div>
+            )}
+            <div>
+              <label className="signup-label">Message (optional)</label>
+              <textarea className="signup-field" rows={3} value={form.message} onChange={setField("message")} placeholder="Tell us about your goals..." style={{resize:"vertical"}} />
+            </div>
+            <div ref={turnstileRef} style={{minHeight:65}} />
+            {error && <div style={{fontSize:13, color:"#DC2626", fontWeight:600}}>{error}</div>}
+            <button type="submit" className="btn-primary" disabled={status==="submitting"} style={{
+              display:"inline-flex", alignItems:"center", justifyContent:"center", gap:8,
+              width:"100%", padding:"16px 36px", borderRadius:10, fontFamily:font,
+              fontWeight:700, fontSize:16, cursor: status==="submitting" ? "wait" : "pointer",
+              border:"none", lineHeight:1, opacity: status==="submitting" ? 0.7 : 1,
+            }}>
+              {status === "submitting" ? "Submitting..." : meta.cta}
+            </button>
+          </form>
+        )}
+      </div>
+    </div>
+  );
+};
+
+const PricingCTA = ({ tier, children, style, onMouseEnter, onMouseLeave }) => {
+  const signup = useSignup();
+  const plan = PLAN_FROM_TIER[tier] || String(tier || "").toLowerCase();
+  return (
+    <button
+      type="button"
+      onClick={() => signup?.openSignup(plan)}
+      style={style}
+      onMouseEnter={onMouseEnter}
+      onMouseLeave={onMouseLeave}
+    >{children}</button>
+  );
+};
+
 // ─── TWEAKS ───────────────────────────────────
 const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
   "accentColor": "#EA580C",
@@ -1634,6 +1815,12 @@ const App = () => {
   const [active, setActiveRaw] = useState(() => localStorage.getItem("fyndroo_page") || "home");
   const [tweaks, setTweaks] = useState(TWEAK_DEFAULTS);
   const [showTweaks, setShowTweaks] = useState(false);
+  const [signup, setSignup] = useState({ open: false, plan: "basic" });
+
+  const signupApi = {
+    openSignup: (plan) => setSignup({ open: true, plan: plan || "basic" }),
+    closeSignup: () => setSignup((s) => ({ ...s, open: false })),
+  };
 
   const setActive = (page) => {
     setActiveRaw(page);
@@ -1654,12 +1841,14 @@ const App = () => {
   const PageComponent = pages[active] || HomePage;
 
   return (
+    <SignupContext.Provider value={signupApi}>
     <div style={{minHeight:"100vh", display:"flex", flexDirection:"column"}}>
       <Nav active={active} setActive={setActive}/>
       <main style={{flex:1, paddingTop:66, width:"100%", overflowX:"hidden"}}>
         <PageComponent setActive={setActive}/>
       </main>
       <Footer setActive={setActive}/>
+      <SignupModal open={signup.open} plan={signup.plan} onClose={signupApi.closeSignup}/>
 
       {/* Tweaks Panel */}
       {showTweaks && (
@@ -1707,6 +1896,7 @@ const App = () => {
         </div>
       )}
     </div>
+    </SignupContext.Provider>
   );
 };
 

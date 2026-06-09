@@ -44,10 +44,26 @@ Deploy script registers the domain on the Pages project. If DNS is not auto-crea
 
 Or: **Workers & Pages** → `fyndroo-biz` → **Custom domains** → confirm `biz.fyndroo.com`.
 
+## Signup forms → Google Sheets
+
+Pricing buttons open a modal; submissions go to **Google Sheets** (+ email via Apps Script).
+
+**One-time setup:** follow [`google-apps-script/SETUP.md`](google-apps-script/SETUP.md), then set Cloudflare secrets:
+
+```bash
+npx wrangler pages secret put GOOGLE_SHEETS_WEBHOOK_URL --project-name=fyndroo-biz
+npx wrangler pages secret put WEBHOOK_SECRET --project-name=fyndroo-biz
+npx wrangler pages secret put TURNSTILE_SECRET_KEY --project-name=fyndroo-biz  # optional
+```
+
+Update `SIGNUP_CONFIG.turnstileSiteKey` in `index.html` with your real Turnstile site key.
+
 ## Files
 
 | Path | Purpose |
 | --- | --- |
 | `index.html` | Site root (Fyndroo Business landing page) |
+| `functions/api/signup.js` | Pages Function — validates + forwards to Google Sheets |
+| `google-apps-script/` | Apps Script + setup guide for the spreadsheet |
 | `wrangler.toml` | Cloudflare Pages config |
 | `scripts/deploy_cdn.sh` | Build-less deploy to Pages + custom domain |
