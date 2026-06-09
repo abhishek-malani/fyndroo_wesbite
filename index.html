@@ -222,7 +222,7 @@ const Badge = ({ children, color = C.orange, bg }) => (
   }}>{children}</span>
 );
 
-const Btn = ({ children, className="btn-primary", onClick, style={{}, size="md" }}) => (
+const Btn = ({ children, className="btn-primary", onClick, style={}, size="md" }) => (
   <button onClick={onClick} className={className} style={{
     display:"inline-flex", alignItems:"center", gap:8,
     padding: size==="sm" ? "8px 18px" : size==="lg" ? "16px 36px" : "12px 26px",
@@ -233,7 +233,7 @@ const Btn = ({ children, className="btn-primary", onClick, style={{}, size="md" 
   }}>{children}</button>
 );
 
-const SectionWrap = ({ children, bg="transparent", style={{}, id="" }}) => (
+const SectionWrap = ({ children, bg="transparent", style={}, id="" }) => (
   <section id={id} className="fy-section" style={{ background:bg, ...style }}>
     <div className="fy-container">{children}</div>
   </section>
@@ -279,7 +279,7 @@ function useReveal() {
   return ref;
 }
 
-const Reveal = ({ children, delay=0, style={{} }}) => {
+const Reveal = ({ children, delay=0, style={} }) => {
   const ref = useReveal();
   return <div ref={ref} className="section-reveal" style={{ transitionDelay:`${delay}ms`, ...style }}>{children}</div>;
 };
