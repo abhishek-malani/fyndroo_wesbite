@@ -94,14 +94,18 @@ export async function onRequestPost({ request, env }) {
     return json(502, { ok: false, error: "Could not reach Google Sheets." });
   }
 
-  let sheetsBody = {};
+  const raw = await sheetsRes.text();
+  let sheetsBody = null;
   try {
-    sheetsBody = await sheetsRes.json();
+    sheetsBody = JSON.parse(raw);
   } catch {
-    sheetsBody = { ok: sheetsRes.ok };
+    return json(502, {
+      ok: false,
+      error: "Google Sheets returned an invalid response. Redeploy Apps Script with doPost saved.",
+    });
   }
 
-  if (!sheetsRes.ok || sheetsBody.ok === false) {
+  if (!sheetsRes.ok || sheetsBody.ok !== true) {
     return json(502, {
       ok: false,
       error: sheetsBody.error || "Google Sheets rejected the submission.",

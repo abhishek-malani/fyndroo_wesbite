@@ -30,6 +30,10 @@ function setupSheet_() {
   return sheet;
 }
 
+function doGet() {
+  return response_({ ok: true, message: "Fyndroo signup webhook is live. Use POST to submit." });
+}
+
 function doPost(e) {
   try {
     var props = PropertiesService.getScriptProperties();
